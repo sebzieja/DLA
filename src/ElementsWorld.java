@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
+import java.util.ArrayList;
 import javax.swing.*;
 
 public class ElementsWorld extends JPanel {
@@ -12,6 +13,11 @@ public class ElementsWorld extends JPanel {
     private DrawCanvas canvas; // Custom canvas for drawing the box/rectangle
     private int canvasWidth;
     private int canvasHeight;
+    private static int howManyRectangles = 50;
+    private static Rectangle[] rectangles = new Rectangle[howManyRectangles];
+    private static ArrayList<Rectangle> staticRectangles = new ArrayList<>();
+
+
 
     public ElementsWorld(int width, int height) {
 
@@ -20,15 +26,17 @@ public class ElementsWorld extends JPanel {
 
         // Init the rectangle at a random location (inside the box) and moveAngle
         Random rand = new Random();
-        int widthRectangle = 100;
-        int heightRectangle = 100;
+        int widthRectangle = 20;
+        int heightRectangle = 20;
         int x = 0;
         int y = 0;
-//        int x = rand.nextInt(canvasWidth - radius * 2 - 20) + radius + 10;
-//        int y = rand.nextInt(canvasHeight - radius * 2 - 20) + radius + 10;
-        int speed = 5;
+
+        int speed = 20;
         int angleInDegree = rand.nextInt(360);
-        rectangle = new Rectangle(x, y, widthRectangle, heightRectangle, speed, angleInDegree, Color.BLUE);
+        for (int i = 0; i < howManyRectangles; i++) {
+            rectangles[i] = new Rectangle(widthRectangle, heightRectangle, canvasWidth, canvasHeight, speed, Color.BLUE);
+        }
+        staticRectangles.add(new Rectangle(canvasWidth / 2, canvasHeight / 2, 20, 20, 0, 0, Color.WHITE));
 
         // Init the Container Box to fill the screen
         box = new ContainerBox(0, 0, canvasWidth, canvasHeight, Color.BLACK, Color.WHITE);
@@ -55,20 +63,24 @@ public class ElementsWorld extends JPanel {
         gameStart();
     }
 
-    /**
-     * Start the rectangle bouncing.
-     */
+
     public void gameStart() {
         // Run the game logic in its own thread.
         Thread gameThread = new Thread(() -> {
             while (true) {
+                long beginTimeMillis, timeTakenMillis, timeLeftMillis;
+                beginTimeMillis = System.currentTimeMillis();
                 // Execute one time-step for the game
                 gameUpdate();
                 // Refresh the display
                 repaint();
+                // Provide the necessary delay to meet the target rate
+                timeTakenMillis = System.currentTimeMillis() - beginTimeMillis;
+                timeLeftMillis = 1000L / UPDATE_RATE - timeTakenMillis;
+                if (timeLeftMillis < 5) timeLeftMillis = 5; // Set a minimum
                 // Delay and give other thread a chance
                 try {
-                    Thread.sleep(1000 / UPDATE_RATE);
+                    Thread.sleep(timeLeftMillis);
                 } catch (InterruptedException ex) {
                 }
             }
@@ -78,23 +90,25 @@ public class ElementsWorld extends JPanel {
 
 
     public void gameUpdate() {
-        rectangle.moveOneStepCollision(box);
+        for (int i = 0; i < howManyRectangles; i++) {
+            rectangles[i].moveOneStepCollision(box);
+        }
     }
 
-    /**
-     * The custom drawing panel for the bouncing rectangle (inner class).
-     */
     class DrawCanvas extends JPanel {
         @Override
-        public void paintComponent(Graphics g) {
-            super.paintComponent(g);    // Paint background
+        public void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);    // Paint background
             // Draw the box and the rectangle
-            box.draw(g);
-            rectangle.draw(g);
+            box.draw(graphics);
+            for (int i = 0; i < howManyRectangles; i++) {
+                rectangles[i].draw(graphics);
+            }
+//            rectangle.draw(graphics);
 //            // Display rectangle's information
-//            g.setColor(Color.WHITE);
-//            g.setFont(new Font("Courier New", Font.PLAIN, 12));
-//            g.drawString("Rectangle " + rectangle.toString(), 20, 30);
+//            graphics.setColor(Color.WHITE);
+//            graphics.setFont(new Font("Courier New", Font.PLAIN, 12));
+//            graphics.drawString("Rectangle " + rectangle.toString(), 20, 30);
         }
 
         @Override
