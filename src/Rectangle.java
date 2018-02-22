@@ -2,7 +2,7 @@ import java.awt.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Rectangle {
-    private float x, y, width, height, speed, speedX, speedY;
+    private float x, y, x2, y2, width, height, speed, speedX, speedY;
     private Color color;
     private static final Color DEFAULT_COLOT = Color.RED;
 
@@ -16,18 +16,16 @@ public class Rectangle {
         this.speed = speed;
         this.width = width;
         this.height = height;
+        this.x2 = x + width;
+        this.y2 = y + height;
         //Convert speed and angle to x, y speed
         this.speedX = (float) (speed * Math.cos(Math.toRadians((angle))));
         this.speedY = (float) (-speed * Math.sin(Math.toRadians((angle))));
         this.color = color;
     }
 
-    /*Constructor with default color*/
-    public Rectangle(float x, float y, float width, float height, float speed, float angle) {
-        this(x, y, width, height, speed, angle, DEFAULT_COLOT);
-    }
 
-    /*TODO constructor with random placement on the borders*/
+    /*Constructor with random placement on the borders*/
     public Rectangle(float width, float height, float canvasWidth, float canvasHeight, float speed, Color color) {
         float p = (float) (ThreadLocalRandom.current().nextDouble(0, canvasWidth * 2 + canvasHeight * 2));
         if (p < (canvasHeight + canvasWidth)) {
@@ -53,10 +51,29 @@ public class Rectangle {
         this.height = height;
         this.color = color;
         this.speed = speed;
-        System.out.println(this.x + " " + this.y);
         this.speedX = (float) (speed * Math.cos(Math.toRadians((15))));
         this.speedY = (float) (-speed * Math.sin(Math.toRadians((15))));
 
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public float getX2() {
+        return x2;
+    }
+
+    public float getY2() {
+        return y2;
+    }
+
+    public boolean intersect(Rectangle rectangle2) {
+        return this.getX() < rectangle2.getX2() && this.getX2() > rectangle2.getX() && this.getY() > rectangle2.getY2() && this.getY2() < rectangle2.getY();
     }
 
     public void draw(Graphics graphics) {
@@ -64,6 +81,8 @@ public class Rectangle {
         graphics.fillRect((int) x, (int) y, (int) width, (int) height);
     }
 
+
+    //TODO Collision Detection
     /*Move one move, check for collision and react if collision occurs*/
     public void moveOneStepCollision(ContainerBox box) {
         // Get the rectangle's bounds, offset by the radius of the rectangle
@@ -75,8 +94,7 @@ public class Rectangle {
         // Calculate the rectangle's new position
         x += (ThreadLocalRandom.current().nextFloat() - 0.5) * speed;
         y += (ThreadLocalRandom.current().nextFloat() - 0.5) * speed;
-//        x += speedX;
-//        y += speedY;
+
         // Check if the rectangle moves over the bounds. If so, adjust the position and speed.
         if (x < rectangleMinX) {
             speedX = -speedX; // Reflect along normal
@@ -95,3 +113,4 @@ public class Rectangle {
         }
     }
 }
+

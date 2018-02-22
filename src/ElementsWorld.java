@@ -14,8 +14,8 @@ public class ElementsWorld extends JPanel {
     private int canvasWidth;
     private int canvasHeight;
     private static int howManyRectangles = 50;
-    private static Rectangle[] rectangles = new Rectangle[howManyRectangles];
-    private static ArrayList<Rectangle> staticRectangles = new ArrayList<>();
+    //    private static Rectangle[] rectangles = new Rectangle[howManyRectangles];
+    private static ArrayList<Rectangle> rectangles = new ArrayList<>();
 
 
 
@@ -32,11 +32,9 @@ public class ElementsWorld extends JPanel {
         int y = 0;
 
         int speed = 20;
-        int angleInDegree = rand.nextInt(360);
         for (int i = 0; i < howManyRectangles; i++) {
-            rectangles[i] = new Rectangle(widthRectangle, heightRectangle, canvasWidth, canvasHeight, speed, Color.BLUE);
+            rectangles.add(new Rectangle(widthRectangle, heightRectangle, canvasWidth, canvasHeight, speed, Color.BLUE));
         }
-        staticRectangles.add(new Rectangle(canvasWidth / 2, canvasHeight / 2, 20, 20, 0, 0, Color.WHITE));
 
         // Init the Container Box to fill the screen
         box = new ContainerBox(0, 0, canvasWidth, canvasHeight, Color.BLACK, Color.WHITE);
@@ -82,6 +80,7 @@ public class ElementsWorld extends JPanel {
                 try {
                     Thread.sleep(timeLeftMillis);
                 } catch (InterruptedException ex) {
+                    ex.printStackTrace();
                 }
             }
         });
@@ -90,9 +89,10 @@ public class ElementsWorld extends JPanel {
 
 
     public void gameUpdate() {
-        for (int i = 0; i < howManyRectangles; i++) {
-            rectangles[i].moveOneStepCollision(box);
+        for (Rectangle rectangle : rectangles) {
+            rectangle.moveOneStepCollision(box);
         }
+
     }
 
     class DrawCanvas extends JPanel {
@@ -101,8 +101,8 @@ public class ElementsWorld extends JPanel {
             super.paintComponent(graphics);    // Paint background
             // Draw the box and the rectangle
             box.draw(graphics);
-            for (int i = 0; i < howManyRectangles; i++) {
-                rectangles[i].draw(graphics);
+            for (Rectangle rectangle : rectangles) {
+                rectangle.draw(graphics);
             }
 //            rectangle.draw(graphics);
 //            // Display rectangle's information
