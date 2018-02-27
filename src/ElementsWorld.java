@@ -11,8 +11,8 @@ public class ElementsWorld extends JPanel {
     private DrawCanvas canvas; // Custom canvas for drawing the box/rectangle
     private int canvasWidth;
     private int canvasHeight;
-    private static int howManyRectangles = 100;
-    //    private static Rectangle[] rectangles = new Rectangle[howManyRectangles];
+    private static int howManyRectangles = 200;
+    private static ArrayList<Rectangle> staticRectangles = new ArrayList<>();
     private static ArrayList<Rectangle> rectangles = new ArrayList<>();
 
 
@@ -25,14 +25,13 @@ public class ElementsWorld extends JPanel {
         // Init the rectangle at a random location (inside the box) and moveAngle
         int widthRectangle = 10;
         int heightRectangle = 10;
-
-        int speed = 5;
         for (int i = 0; i < howManyRectangles; i++) {
             rectangles.add(createRectangle(widthRectangle, heightRectangle, canvasWidth, canvasHeight, 1, Color.BLUE));
         }
         Rectangle stopped = new Rectangle((canvasWidth - 20) / 2, (canvasHeight - 20) / 2, 20, 20, 0, 15, Color.RED);
         stopped.stopped = true;
         rectangles.add(stopped);
+        staticRectangles.add(stopped);
 
 
         // Init the Container Box to fill the screen
@@ -102,11 +101,6 @@ public class ElementsWorld extends JPanel {
             for (Rectangle rectangle : rectangles) {
                 rectangle.draw(graphics);
             }
-//            rectangle.draw(graphics);
-//            // Display rectangle's information
-//            graphics.setColor(Color.WHITE);
-//            graphics.setFont(new Font("Courier New", Font.PLAIN, 12));
-//            graphics.drawString("Rectangle " + rectangle.toString(), 20, 30);
         }
 
         @Override
@@ -119,23 +113,25 @@ public class ElementsWorld extends JPanel {
         // Get the rectangle's bounds, offset by the radius of the rectangle
 
 
-        float rectangleMinX = box.minX + 1;
-        float rectangleMinY = box.minY + 1;
-        float rectangleMaxX = box.maxX - rectangle.height - 1;
-        float rectangleMaxY = box.maxY - rectangle.width - 1;
-
         // Calculate the rectangle's new position
         rectangle.x += (ThreadLocalRandom.current().nextFloat() - 0.5) * rectangle.speed;
         rectangle.y += (ThreadLocalRandom.current().nextFloat() - 0.5) * rectangle.speed;
-        for (Rectangle rect : rectangles) {
+        for (Rectangle rect : staticRectangles) {
             if (!rectangle.stopped && rect.stopped && (rect != rectangle)) {
                 if (rectangle.intersect(rect)) {
                     rectangle.speed = 0;
                     rectangle.color = Color.RED;
                     rectangle.stopped = true;
+                    staticRectangles.add(rectangle);
+                    return;
                 }
             }
         }
+
+        float rectangleMinX = box.minX + 1;
+        float rectangleMinY = box.minY + 1;
+        float rectangleMaxX = box.maxX - rectangle.height - 1;
+        float rectangleMaxY = box.maxY - rectangle.width - 1;
 
         // Check if the rectangle moves over the bounds. If so, adjust the position and speed.
         if (rectangle.x < rectangleMinX) {
