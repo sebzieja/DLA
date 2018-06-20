@@ -1,4 +1,8 @@
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.SplittableRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.math3.distribution.*;
@@ -15,6 +19,8 @@ public class Rectangle {
     public float x, y, x2, y2, width, height;
     public boolean stopped;
     public Color color = Color.RED;
+    public LinkedHashSet<Integer> matrixIndex = new LinkedHashSet<>();
+    private static SplittableRandom splittableRandom = new SplittableRandom();
 
     /*
      * Contructor
@@ -42,43 +48,63 @@ public class Rectangle {
         this.width = width;
         this.height = height;
         this.color = color;
-
+        this.calculateMatrixIndex(canvasWidth, canvasHeight);
+    }
+    
+    public void calculateMatrixIndex(float canvasWidth, float canvasHeight){
+        int rowx1, rowx2, columny1, columny2, firstCorner, secondCorner;
+        matrixIndex.clear();
+        rowx1 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x);
+        columny1 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/y);
+        rowx2 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x2);
+        columny2 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/y2);
+        firstCorner = rowx1 * ElementsWorld.howManyPiecesInRow + columny1;
+        secondCorner = rowx2 * ElementsWorld.howManyPiecesInRow + columny2;
+        if(secondCorner-firstCorner > firstCorner + ElementsWorld.howManyPiecesInRow){
+            matrixIndex.add(firstCorner);
+            matrixIndex.add(firstCorner+1);
+            matrixIndex.add(secondCorner);
+            matrixIndex.add(secondCorner-1);
+        }
+        else{
+            matrixIndex.add(firstCorner);
+            matrixIndex.add(secondCorner);
+        }
     }
 
     public static void setNormalDistribution(double temperature) {
         Rectangle.normalDistribution = new NormalDistribution(0, temperature);
     }
-//    public Rectangle(float width, float height, float canvasWidth, float canvasHeight, float speed, Color color) {
-//        float p = (float) (ThreadLocalRandom.current().nextDouble(0, canvasWidth * 2 + canvasHeight * 2));
-//        if (p < (canvasHeight + canvasWidth)) {
-//            if (p < canvasWidth) {
-//                this.x = p;
-//                this.y = 0;
-//            } else {
-//                this.x = canvasWidth;
-//                this.y = p - canvasWidth;
-//            }
-//
-//        } else {
-//            p -= (canvasWidth + canvasHeight);
-//            if (p < canvasWidth) {
-//                this.x = canvasWidth - p;
-//                this.y = canvasHeight;
-//                this.x2 = canvasWidth - p + width;
-//                this.y2 = canvasWidth + height;
-//            } else {
-//                this.x = 0;
-//                this.y = canvasHeight - (p - canvasWidth);
-//            }
-//        }
-//        this.width = width;
-//        this.height = height;
-//        this.color = color;
-//        this.speed = speed;
-//        this.speedX = (float) (speed * Math.cos(Math.toRadians((15))));
-//        this.speedY = (float) (-speed * Math.sin(Math.toRadians((15))));
-//
-//    }
+    public static Rectangle createRectangleOnBorder(float width, float height, float canvasWidth, float canvasHeight, Color color) {
+        Rectangle rectangle = new Rectangle();
+        float p = (float) (ThreadLocalRandom.current().nextDouble(0, canvasWidth * 2 + canvasHeight * 2));
+        if (p < (canvasHeight + canvasWidth)) {
+            if (p < canvasWidth) {
+                rectangle.x = p;
+                rectangle.y = 0;
+            } else {
+                rectangle.x = canvasWidth;
+                rectangle.y = p - canvasWidth;
+            }
+
+        } else {
+            p -= (canvasWidth + canvasHeight);
+            if (p < canvasWidth) {
+                rectangle.x = canvasWidth - p;
+                rectangle.y = canvasHeight;
+                rectangle.x2 = canvasWidth - p + width;
+                rectangle.y2 = canvasWidth + height;
+            } else {
+                rectangle.x = 0;
+                rectangle.y = canvasHeight - (p - canvasWidth);
+            }
+        }
+        rectangle.width = width;
+        rectangle.height = height;
+        rectangle.color = color;
+        return rectangle;
+
+    }
 
 
     public boolean intersect(Rectangle rectangle) {
@@ -94,26 +120,24 @@ public class Rectangle {
     }
 
     public void calculateNextStepCooridanates() {
-        x += (ThreadLocalRandom.current().nextFloat() - 0.5) * abs(ceil(normalDistribution.sample()));
-        y += (ThreadLocalRandom.current().nextFloat() - 0.5) * abs(ceil(normalDistribution.sample()));
+        x += (splittableRandom.nextDouble(1.0) - 0.5) * abs(ceil(normalDistribution.sample()));
+        y += (splittableRandom.nextDouble(1.0) - 0.5) * abs(ceil(normalDistribution.sample()));
     }
 
     //TODO Collision Detection
     /*Move one move, check for collision and react if collision occurs*/
-    public void moveOneStepCollision(ContainerBox box) {
+    /*Return true if collision detected*/
+    public boolean moveOneStepCollision(ContainerBox box) {
         // Get the rectangle's bounds, offset by the radius of the rectangle
-
-        if (!stopped) {
+        
             // Calculate the rectangle's new position
             calculateNextStepCooridanates();
             for (Rectangle rect : ElementsWorld.staticRectangles) {
-                if (rect.stopped) {
-                    if (intersect(rect)) {
-                        color = Color.RED;
-                        stopped = true;
-                        ElementsWorld.staticRectangles.add(this);
-                        return;
-                    }
+                if (intersect(rect)) {
+                    color = Color.RED;
+                    stopped = true;
+//                        ElementsWorld.staticRectangles.add(this);
+                    return true;
                 }
             }
 
@@ -122,19 +146,55 @@ public class Rectangle {
             float rectangleMaxX = box.maxX - height - 1;
             float rectangleMaxY = box.maxY - width - 1;
 
-            // Check if the rectangle moves over the bounds. If so, adjust the position and speed.
-            if (x < rectangleMinX) {
-                x = rectangleMinX;     // Re-position the rectangle at the edge
-            } else if (x > rectangleMaxX) {
+//            // Check if the rectangle moves over the bounds. If so, bounce from bound
+//            if (x < rectangleMinX) {
+//                x = rectangleMinX;     // Re-position the rectangle at the edge
+//            } else if (x > rectangleMaxX) {
+//                x = rectangleMaxX;
+//            }
+//            // May cross both x and y bounds
+//            if (y < rectangleMinY) {
+//                y = rectangleMinY;
+//            } else if (y > rectangleMaxY) {
+//                y = rectangleMaxY;
+//            }
+            //Check if the rectangle moves over bounds. If so, teleport to other side.
+            if (x < rectangleMinX){
                 x = rectangleMaxX;
+            } else if (x > rectangleMaxX){
+                x = rectangleMinX;
             }
-            // May cross both x and y bounds
             if (y < rectangleMinY) {
-                y = rectangleMinY;
-            } else if (y > rectangleMaxY) {
                 y = rectangleMaxY;
+            } else if (y > rectangleMaxY) {
+                y = rectangleMinY;
             }
-        }
+        return false;
+    }
+
+////            // Check if the rectangle moves over the bounds. If so, bounce from bound
+////            if (x < rectangleMinX) {
+////                x = rectangleMinX;     // Re-position the rectangle at the edge
+////            } else if (x > rectangleMaxX) {
+////                x = rectangleMaxX;
+////            }
+////            // May cross both x and y bounds
+////            if (y < rectangleMinY) {
+////                y = rectangleMinY;
+////            } else if (y > rectangleMaxY) {
+////                y = rectangleMaxY;
+////            }
+    
+    @Override
+    public boolean equals(Object other){
+        if (this == other) return true;
+        if (!(other instanceof Rectangle)) return false;
+        final Rectangle that = (Rectangle) other;
+        return (this.x == that.x && this.x2 == that.x2 && this.y == that.y && this.y2 == that.y2);
+    }
+    @Override
+    public int hashCode(){
+        return (int)(this.width * 31 + this.height);
     }
 }
 

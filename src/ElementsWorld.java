@@ -13,11 +13,32 @@ public class ElementsWorld extends JPanel {
 
     private ContainerBox box;  // The container rectangular box
     private DrawCanvas canvas; // Custom canvas for drawing the box/rectangle
+
     private int canvasWidth;
     private int canvasHeight;
     public static ArrayList<Rectangle> staticRectangles = new ArrayList<>();
     public static ArrayList<Rectangle> rectangles = new ArrayList<>();
+    public ArrayList<LinkedList<Rectangle>> listOfMatrix;
+    static int howManyPiecesInRow = 2;
     private int howManyRectangles = 200;
+    Thread gameThread;
+    ListIterator<Rectangle> iter;
+    Rectangle item;
+    long startMillis;
+    long endMilis;
+    int numberOfStaticRectangles = 1;
+    ArrayList<Long> averageTime = new ArrayList<>();
+    
+    public void createMatrix(int howManyPiecesInRow){
+        this.howManyPiecesInRow = howManyPiecesInRow;
+        listOfMatrix = new ArrayList<>();
+        for(int i=0; i<howManyPiecesInRow*howManyPiecesInRow; ++i){
+            listOfMatrix.add(new LinkedList<Rectangle>());
+        }
+    }
+    public void addRectangleToMatrix(Rectangle rectangle){
+        
+    }
 
     public ElementsWorld(int width, int height) {
 
@@ -57,15 +78,21 @@ public class ElementsWorld extends JPanel {
     }
 
     public void createRectangles(int width, int height) {
-        staticRectangles = new ArrayList<>();
-        rectangles = new ArrayList<>();
+        createMatrix(howManyPiecesInRow);
         for (int i = 0; i < howManyRectangles; i++) {
             rectangles.add(createRectangle(width, height, canvasWidth, canvasHeight, Color.BLUE));
         }
         Rectangle stopped = new Rectangle((canvasWidth / 2) - 10, (canvasHeight / 2) - 10, 20, 20);
+        stopped.calculateMatrixIndex(canvasWidth, canvasHeight);
         stopped.stopped = true;
-        rectangles.add(stopped);
+//        rectangles.add(stopped);
         staticRectangles.add(stopped);
+    }
+    
+    public void createRectangleOnBorder(int width, int height){
+        for (int i = 0; i < howManyRectangles; i++) {
+            rectangles.add(Rectangle.createRectangleOnBorder(width, height, canvasWidth, canvasHeight, Color.BLUE));
+        }
     }
 
     public Rectangle createRectangle(int widthRectangle, int heightRectangle, int canvasWidth, int canvasHeight, Color color) {
@@ -74,29 +101,76 @@ public class ElementsWorld extends JPanel {
 
     public void gameStart() {
         // Run the game logic in its own thread.
-        Thread gameThread = new Thread(() -> {
-            while (true) {
-
-                for (int i = 0; i < 100; i++) {
+        gameThread = new Thread(() -> {
+            while (!gameThread.isInterrupted()) {
+                if(rectangles.size() == 0) {
+                    return;
+                }
+                startMillis = System.nanoTime();
+//                for (int i = 0; i < 10; i++) {
                     gameUpdate();
+//                }
+                endMilis = System.nanoTime();
+                if ((staticRectangles.size() == numberOfStaticRectangles)) {
+                    averageTime.add(endMilis - startMillis);
+                } else {
+                    System.out.println(numberOfStaticRectangles + "," + averageTime.stream().mapToDouble(val -> val).average().orElse(0.0));
+                    numberOfStaticRectangles=staticRectangles.size();
+                    averageTime.clear();
+                    averageTime.add(endMilis - startMillis);
                 }
                 repaint();
                 try {
                     Thread.sleep(speed);
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+                    Thread.currentThread().interrupt();
 
                 }
             }
         });
-        gameThread.start();  // Invoke GameThread.run()
-    }
+        gameThread.start();
+    } 
 
 
     public void gameUpdate() {
+        iter = rectangles.listIterator();
+        while (iter.hasNext()) {
+            try{
+                item = iter.next();
+            } catch (Exception e){
+                gameThread.interrupt();
+            }
+            if(item.moveOneStepCollision(box)){
+                staticRectangles.add(item);
+                iter.remove();
+            }
+        }
         for (Rectangle rectangle : rectangles) {
             rectangle.moveOneStepCollision(box);
         }
+//        iter = rectangles.listIterator();
+//        while (iter.hasNext()) {
+//            item = iter.next();
+//            if (item.moveOneStepCollision(box, listOfMatrix)) {
+//                staticRectangles.add(item);
+//                iter.remove();
+//            }
+//            
+//        }
+    }
+    public int getCanvasWidth() {
+        return canvasWidth;
+    }
+
+    public int getCanvasHeight() {
+        return canvasHeight;
+    }
+    public static void setStaticRectangles(ArrayList<Rectangle> staticRectangles) {
+        ElementsWorld.staticRectangles = staticRectangles;
+    }
+
+    public static void setRectangles(ArrayList<Rectangle> rectangles) {
+        ElementsWorld.rectangles = rectangles;
     }
 
 
@@ -107,6 +181,9 @@ public class ElementsWorld extends JPanel {
             // Draw the box and the rectangle
             box.draw(graphics);
             for (Rectangle rectangle : rectangles) {
+                rectangle.draw(graphics);
+            }
+            for(Rectangle rectangle : staticRectangles){
                 rectangle.draw(graphics);
             }
         }
