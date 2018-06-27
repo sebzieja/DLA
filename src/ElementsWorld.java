@@ -145,9 +145,9 @@ public class ElementsWorld extends JPanel {
                 iter.remove();
             }
         }
-        for (Rectangle rectangle : rectangles) {
-            rectangle.moveOneStepCollision(box);
-        }
+//        for (Rectangle rectangle : rectangles) {
+//            rectangle.moveOneStepCollision(box);
+//        }
 //        iter = rectangles.listIterator();
 //        while (iter.hasNext()) {
 //            item = iter.next();

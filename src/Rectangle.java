@@ -16,7 +16,7 @@ import static org.apache.commons.math3.util.FastMath.ceil;
 
 public class Rectangle {
     public static NormalDistribution normalDistribution = new NormalDistribution(0, 1);
-    public float x, y, x2, y2, width, height;
+    public float x, y, x2, y2, width, height, rectangleMinX, rectangleMinY, rectangleMaxX, rectangleMaxY;
     public boolean stopped;
     public Color color = Color.RED;
     public LinkedHashSet<Integer> matrixIndex = new LinkedHashSet<>();
@@ -133,18 +133,17 @@ public class Rectangle {
             // Calculate the rectangle's new position
             calculateNextStepCooridanates();
             for (Rectangle rect : ElementsWorld.staticRectangles) {
-                if (intersect(rect)) {
-                    color = Color.RED;
-                    stopped = true;
-//                        ElementsWorld.staticRectangles.add(this);
-                    return true;
-                }
+                    if (intersect(rect)) {
+                        color = Color.RED;
+                        stopped = true;
+                        return true;
+                    }
             }
 
-            float rectangleMinX = box.minX + 1;
-            float rectangleMinY = box.minY + 1;
-            float rectangleMaxX = box.maxX - height - 1;
-            float rectangleMaxY = box.maxY - width - 1;
+            rectangleMinX = box.minX + 1;
+            rectangleMinY = box.minY + 1;
+            rectangleMaxX = box.maxX - height - 1;
+            rectangleMaxY = box.maxY - width - 1;
 
 //            // Check if the rectangle moves over the bounds. If so, bounce from bound
 //            if (x < rectangleMinX) {
