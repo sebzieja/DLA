@@ -1,8 +1,5 @@
-import javax.smartcardio.Card;
 import javax.swing.*;
 import java.awt.*;
-import java.text.ParseException;
-import java.util.Hashtable;
 
 
 public class GUI {

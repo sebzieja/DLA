@@ -22,7 +22,7 @@ public class ElementsWorld extends JPanel {
     static int howManyPiecesInRow = 2;
     private int howManyRectangles = 200;
     Thread gameThread;
-    ListIterator<Rectangle> iter;
+    ListIterator<Rectangle> iter, paintIterator;
     Rectangle item;
     long startMillis;
     long endMilis;
@@ -120,16 +120,18 @@ public class ElementsWorld extends JPanel {
                     averageTime.add(endMilis - startMillis);
                 }
                 repaint();
-                try {
-                    Thread.sleep(speed);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-
+                if(speed != 1/100) {
+                    try {
+                        Thread.sleep(speed);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
         });
         gameThread.start();
-    } 
+    }
+
 
 
     public void gameUpdate() {
@@ -180,11 +182,11 @@ public class ElementsWorld extends JPanel {
             super.paintComponent(graphics);    // Paint background
             // Draw the box and the rectangle
             box.draw(graphics);
-            for (Rectangle rectangle : rectangles) {
-                rectangle.draw(graphics);
+            for(int i=0;i<rectangles.size();++i){
+                rectangles.get(i).draw(graphics);
             }
-            for(Rectangle rectangle : staticRectangles){
-                rectangle.draw(graphics);
+            for(int i=0;i<staticRectangles.size();++i){
+                staticRectangles.get(i).draw(graphics);
             }
         }
 
@@ -200,7 +202,7 @@ public class ElementsWorld extends JPanel {
 //
 //
 //        // Calculate the rectangle's new position
-//        rectangle.calculateNextStepCooridanates();
+//        rectangle.calculateNextStepCoordinates();
 //        for (Rectangle rect : staticRectangles) {
 //            if (!rectangle.stopped && rect.stopped && (rect != rectangle)) {
 //                if (rectangle.intersect(rect)) {

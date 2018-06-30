@@ -1,13 +1,9 @@
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.SplittableRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.math3.distribution.*;
-
-import java.lang.Math.*;
 
 
 import static org.apache.commons.math3.util.FastMath.abs;
@@ -15,6 +11,7 @@ import static org.apache.commons.math3.util.FastMath.ceil;
 
 
 public class Rectangle {
+    private int row1, row2, column1, column2, firstCorner, secondCorner;
     public static NormalDistribution normalDistribution = new NormalDistribution(0, 1);
     public float x, y, x2, y2, width, height, rectangleMinX, rectangleMinY, rectangleMaxX, rectangleMaxY;
     public boolean stopped;
@@ -52,14 +49,13 @@ public class Rectangle {
     }
     
     public void calculateMatrixIndex(float canvasWidth, float canvasHeight){
-        int rowx1, rowx2, columny1, columny2, firstCorner, secondCorner;
         matrixIndex.clear();
-        rowx1 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x);
-        columny1 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/y);
-        rowx2 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x2);
-        columny2 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/y2);
-        firstCorner = rowx1 * ElementsWorld.howManyPiecesInRow + columny1;
-        secondCorner = rowx2 * ElementsWorld.howManyPiecesInRow + columny2;
+        row1 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x);
+        column1 = (int)(canvasHeight/ElementsWorld.howManyPiecesInRow/y);
+        row2 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x2);
+        column2 = (int)(canvasHeight/ElementsWorld.howManyPiecesInRow/y2);
+        firstCorner = row1 * ElementsWorld.howManyPiecesInRow + column1;
+        secondCorner = row2 * ElementsWorld.howManyPiecesInRow + column2;
         if(secondCorner-firstCorner > firstCorner + ElementsWorld.howManyPiecesInRow){
             matrixIndex.add(firstCorner);
             matrixIndex.add(firstCorner+1);
@@ -86,7 +82,6 @@ public class Rectangle {
                 rectangle.x = canvasWidth;
                 rectangle.y = p - canvasWidth;
             }
-
         } else {
             p -= (canvasWidth + canvasHeight);
             if (p < canvasWidth) {
@@ -103,9 +98,7 @@ public class Rectangle {
         rectangle.height = height;
         rectangle.color = color;
         return rectangle;
-
     }
-
 
     public boolean intersect(Rectangle rectangle) {
         if (this.x < (rectangle.x + rectangle.width) && (this.x + this.width) > rectangle.x && this.y < (rectangle.y + rectangle.height) && (this.y + this.height) > rectangle.y) {
@@ -119,9 +112,11 @@ public class Rectangle {
         graphics.fillRect((int) x, (int) y, (int) width, (int) height);
     }
 
-    public void calculateNextStepCooridanates() {
+    public void calculateNextStepCoordinates() {
         x += (splittableRandom.nextDouble(1.0) - 0.5) * abs(ceil(normalDistribution.sample()));
         y += (splittableRandom.nextDouble(1.0) - 0.5) * abs(ceil(normalDistribution.sample()));
+        x2 = x + width;
+        y2 = y + height;
     }
 
     //TODO Collision Detection
@@ -129,60 +124,50 @@ public class Rectangle {
     /*Return true if collision detected*/
     public boolean moveOneStepCollision(ContainerBox box) {
         // Get the rectangle's bounds, offset by the radius of the rectangle
-        
-            // Calculate the rectangle's new position
-            calculateNextStepCooridanates();
-            for (Rectangle rect : ElementsWorld.staticRectangles) {
-                    if (intersect(rect)) {
-                        color = Color.RED;
-                        stopped = true;
-                        return true;
-                    }
+
+        // Calculate the rectangle's new position
+        calculateNextStepCoordinates();
+        for (Rectangle rect : ElementsWorld.staticRectangles) {
+            if (intersect(rect)) {
+                color = Color.RED;
+                stopped = true;
+                return true;
             }
+        }
 
-            rectangleMinX = box.minX + 1;
-            rectangleMinY = box.minY + 1;
-            rectangleMaxX = box.maxX - height - 1;
-            rectangleMaxY = box.maxY - width - 1;
+        rectangleMinX = box.minX + 1;
+        rectangleMinY = box.minY + 1;
+        rectangleMaxX = box.maxX - height - 1;
+        rectangleMaxY = box.maxY - width - 1;
 
-//            // Check if the rectangle moves over the bounds. If so, bounce from bound
-//            if (x < rectangleMinX) {
-//                x = rectangleMinX;     // Re-position the rectangle at the edge
-//            } else if (x > rectangleMaxX) {
+//            //Check if the rectangle moves over bounds. If so, teleport to other side.
+//            if (x < rectangleMinX){
 //                x = rectangleMaxX;
+//            } else if (x > rectangleMaxX){
+//                x = rectangleMinX;
 //            }
-//            // May cross both x and y bounds
 //            if (y < rectangleMinY) {
-//                y = rectangleMinY;
-//            } else if (y > rectangleMaxY) {
 //                y = rectangleMaxY;
+//            } else if (y > rectangleMaxY) {
+//                y = rectangleMinY;
 //            }
-            //Check if the rectangle moves over bounds. If so, teleport to other side.
-            if (x < rectangleMinX){
-                x = rectangleMaxX;
-            } else if (x > rectangleMaxX){
-                x = rectangleMinX;
-            }
-            if (y < rectangleMinY) {
-                y = rectangleMaxY;
-            } else if (y > rectangleMaxY) {
-                y = rectangleMinY;
-            }
+//        return false;
+//    }
+
+        // Check if the rectangle moves over the bounds. If so, bounce from bound
+        if (x < rectangleMinX) {
+            x = rectangleMinX;     // Re-position the rectangle at the edge
+        } else if (x > rectangleMaxX) {
+            x = rectangleMaxX;
+        }
+        // May cross both x and y bounds
+        if (y < rectangleMinY) {
+            y = rectangleMinY;
+        } else if (y > rectangleMaxY) {
+            y = rectangleMaxY;
+        }
         return false;
     }
-
-////            // Check if the rectangle moves over the bounds. If so, bounce from bound
-////            if (x < rectangleMinX) {
-////                x = rectangleMinX;     // Re-position the rectangle at the edge
-////            } else if (x > rectangleMaxX) {
-////                x = rectangleMaxX;
-////            }
-////            // May cross both x and y bounds
-////            if (y < rectangleMinY) {
-////                y = rectangleMinY;
-////            } else if (y > rectangleMaxY) {
-////                y = rectangleMaxY;
-////            }
     
     @Override
     public boolean equals(Object other){
