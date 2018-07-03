@@ -1,6 +1,5 @@
 import java.awt.*;
-import java.util.LinkedHashSet;
-import java.util.SplittableRandom;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.math3.distribution.*;
@@ -13,11 +12,12 @@ import static org.apache.commons.math3.util.FastMath.ceil;
 public class Rectangle {
     private int row1, row2, column1, column2, firstCorner, secondCorner;
     public static NormalDistribution normalDistribution = new NormalDistribution(0, 1);
-    public float x, y, x2, y2, width, height, rectangleMinX, rectangleMinY, rectangleMaxX, rectangleMaxY;
+    public double x, y, x2, y2, width, height, rectangleMinX, rectangleMinY, rectangleMaxX, rectangleMaxY;
     public boolean stopped;
     public Color color = Color.RED;
     public LinkedHashSet<Integer> matrixIndex = new LinkedHashSet<>();
     private static SplittableRandom splittableRandom = new SplittableRandom();
+    private ListIterator<Rectangle> staticRectangleIterator;
 
     /*
      * Contructor
@@ -27,7 +27,7 @@ public class Rectangle {
     }
 
     //    public createStaticRectangle();
-    public Rectangle(float x, float y, float width, float height) {
+    public Rectangle(double x, double y, double width, double height) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -38,24 +38,29 @@ public class Rectangle {
 
 
     /*Constructor with random placement on the borders*/
-    public Rectangle(float width, float height, float canvasWidth, float canvasHeight, Color color) {
-//        float p = (float) (ThreadLocalRandom.current().nextDouble(0, canvasWidth * 2 + canvasHeight * 2));
-        this.x = (float) (ThreadLocalRandom.current().nextDouble(20, canvasWidth - 20));
-        this.y = (float) (ThreadLocalRandom.current().nextDouble(20, canvasHeight - 20));
+    public Rectangle(double width, double height, double canvasWidth, double canvasHeight, Color color) {
+//        double p = (double) (ThreadLocalRandom.current().nextDouble(0, canvasWidth * 2 + canvasHeight * 2));
+        this.x = (double) (ThreadLocalRandom.current().nextDouble(20, canvasWidth - 20));
+        this.y = (double) (ThreadLocalRandom.current().nextDouble(20, canvasHeight - 20));
+        this.x2 = this.x + width;
+        this.y2 = this.y + height;
         this.width = width;
         this.height = height;
         this.color = color;
         this.calculateMatrixIndex(canvasWidth, canvasHeight);
     }
     
-    public void calculateMatrixIndex(float canvasWidth, float canvasHeight){
+    public void calculateMatrixIndex(double canvasWidth, double canvasHeight){
         matrixIndex.clear();
-        row1 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x);
-        column1 = (int)(canvasHeight/ElementsWorld.howManyPiecesInRow/y);
-        row2 = (int)(canvasWidth/ElementsWorld.howManyPiecesInRow/x2);
-        column2 = (int)(canvasHeight/ElementsWorld.howManyPiecesInRow/y2);
+        row1 = (int)(x/(canvasWidth/(double)ElementsWorld.howManyPiecesInRow));
+        column1 = (int)(y/(canvasHeight/(double)ElementsWorld.howManyPiecesInRow));
+        row2 = (int)(x2/(canvasWidth/(double)ElementsWorld.howManyPiecesInRow));
+        column2 = (int)(y2/(canvasHeight/(double)ElementsWorld.howManyPiecesInRow));
         firstCorner = row1 * ElementsWorld.howManyPiecesInRow + column1;
         secondCorner = row2 * ElementsWorld.howManyPiecesInRow + column2;
+        if(secondCorner>=81 || firstCorner>=81){
+            System.out.println("why not?");
+        }
         if(secondCorner-firstCorner > firstCorner + ElementsWorld.howManyPiecesInRow){
             matrixIndex.add(firstCorner);
             matrixIndex.add(firstCorner+1);
@@ -67,13 +72,16 @@ public class Rectangle {
             matrixIndex.add(secondCorner);
         }
     }
+    public void checkIfInTheSameMatrixIndex(double canvasWidth, double canvasHeight){
+        //TODO
+    }
 
     public static void setNormalDistribution(double temperature) {
         Rectangle.normalDistribution = new NormalDistribution(0, temperature);
     }
-    public static Rectangle createRectangleOnBorder(float width, float height, float canvasWidth, float canvasHeight, Color color) {
+    public static Rectangle createRectangleOnBorder(double width, double height, double canvasWidth, double canvasHeight, Color color) {
         Rectangle rectangle = new Rectangle();
-        float p = (float) (ThreadLocalRandom.current().nextDouble(0, canvasWidth * 2 + canvasHeight * 2));
+        double p = (double) (ThreadLocalRandom.current().nextDouble(0, canvasWidth * 2 + canvasHeight * 2));
         if (p < (canvasHeight + canvasWidth)) {
             if (p < canvasWidth) {
                 rectangle.x = p;
@@ -112,7 +120,7 @@ public class Rectangle {
         graphics.fillRect((int) x, (int) y, (int) width, (int) height);
     }
 
-    public void calculateNextStepCoordinates() {
+    public void calculateNextStepCoordinates(int canvasWidth, int canvasHeight) {
         x += (splittableRandom.nextDouble(1.0) - 0.5) * abs(ceil(normalDistribution.sample()));
         y += (splittableRandom.nextDouble(1.0) - 0.5) * abs(ceil(normalDistribution.sample()));
         x2 = x + width;
@@ -122,18 +130,20 @@ public class Rectangle {
     //TODO Collision Detection
     /*Move one move, check for collision and react if collision occurs*/
     /*Return true if collision detected*/
-    public boolean moveOneStepCollision(ContainerBox box) {
+    public boolean moveOneStepCollision(ContainerBox box, ArrayList<LinkedList<Rectangle>> listOfMatrix, int canvasWidth, int canvasHeight) {
         // Get the rectangle's bounds, offset by the radius of the rectangle
 
         // Calculate the rectangle's new position
-        calculateNextStepCoordinates();
-        for (Rectangle rect : ElementsWorld.staticRectangles) {
-            if (intersect(rect)) {
-                color = Color.RED;
-                stopped = true;
-                return true;
-            }
-        }
+        calculateNextStepCoordinates(canvasWidth, canvasHeight);
+        //Calculate intersection with every staticRectangle
+//        for (Rectangle rect : ElementsWorld.staticRectangles) {
+//            if (intersect(rect)) {
+//                color = Color.RED;
+//                stopped = true;
+//                return true;
+//            }
+//        }
+        //Calculate intersection with staticRectangle in the same matrix
 
         rectangleMinX = box.minX + 1;
         rectangleMinY = box.minY + 1;
@@ -156,15 +166,31 @@ public class Rectangle {
 
         // Check if the rectangle moves over the bounds. If so, bounce from bound
         if (x < rectangleMinX) {
-            x = rectangleMinX;     // Re-position the rectangle at the edge
-        } else if (x > rectangleMaxX) {
-            x = rectangleMaxX;
+            x = rectangleMinX+1;     // Re-position the rectangle at the edge
+            x2 = x+width;
+        } else if (x >= rectangleMaxX) {
+            x = rectangleMaxX-1;
+            x2 = x+width;
         }
         // May cross both x and y bounds
         if (y < rectangleMinY) {
-            y = rectangleMinY;
+            y = rectangleMinY+1;
+            y2 = y + height;
         } else if (y > rectangleMaxY) {
-            y = rectangleMaxY;
+            y = rectangleMaxY-1;
+            y2 = y + height;
+        }
+        calculateMatrixIndex(canvasWidth, canvasHeight);
+
+        for(int i=0; i<matrixIndex.size(); ++i){
+            staticRectangleIterator = listOfMatrix.get((Integer) matrixIndex.toArray()[i]).listIterator();
+            while(staticRectangleIterator.hasNext()){
+                if(intersect(staticRectangleIterator.next())){
+                    color = Color.RED;
+                    stopped = true;
+                    return true;
+                }
+            }
         }
         return false;
     }

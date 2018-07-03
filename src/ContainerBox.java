@@ -11,8 +11,8 @@ public class ContainerBox {
     public ContainerBox(int x, int y, int width, int height, Color colorFilled, Color colorBorder) {
         minX = x;
         minY = y;
-        maxX = x + width - 1;
-        maxY = y + height - 1;
+        maxX = x + width;
+        maxY = y + height;
         this.colorFilled = colorFilled;
         this.colorBorder = colorBorder;
     }
@@ -31,9 +31,9 @@ public class ContainerBox {
 
     public void draw(Graphics graphics) {
         graphics.setColor(colorFilled);
-        graphics.fillRect(minX, minY, maxX - minX - 1, maxY - minY - 1);
+        graphics.fillRect(minX, minY, maxX - minX, maxY - minY);
         graphics.setColor(colorBorder);
-        graphics.drawRect(minX, minY, maxX - minX - 1, maxY - minY - 1);
+        graphics.drawRect(minX, minY, maxX - minX, maxY - minY);
     }
 }
 

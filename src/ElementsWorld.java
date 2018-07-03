@@ -1,9 +1,6 @@
-import org.apache.commons.math3.distribution.NormalDistribution;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import javax.swing.*;
 
 public class ElementsWorld extends JPanel {
@@ -18,14 +15,15 @@ public class ElementsWorld extends JPanel {
     private int canvasHeight;
     public static ArrayList<Rectangle> staticRectangles = new ArrayList<>();
     public static ArrayList<Rectangle> rectangles = new ArrayList<>();
-    public ArrayList<LinkedList<Rectangle>> listOfMatrix;
-    static int howManyPiecesInRow = 2;
+    public static ArrayList<LinkedList<Rectangle>> listOfMatrix;
+    public ArrayList<LinkedList<Rectangle>> listOfMatrixStaticRectangles;
+    static int howManyPiecesInRow = 9;
     private int howManyRectangles = 200;
     Thread gameThread;
-    ListIterator<Rectangle> iter, paintIterator;
+    ListIterator<Rectangle> iter, paintIterator, matrixIterator;
     Rectangle item;
     long startMillis;
-    long endMilis;
+    long endMillis;
     int numberOfStaticRectangles = 1;
     ArrayList<Long> averageTime = new ArrayList<>();
     
@@ -85,6 +83,9 @@ public class ElementsWorld extends JPanel {
         Rectangle stopped = new Rectangle((canvasWidth / 2) - 10, (canvasHeight / 2) - 10, 20, 20);
         stopped.calculateMatrixIndex(canvasWidth, canvasHeight);
         stopped.stopped = true;
+        for(Integer i : stopped.matrixIndex){
+            listOfMatrix.get(i).add(stopped);
+        }
 //        rectangles.add(stopped);
         staticRectangles.add(stopped);
     }
@@ -106,18 +107,20 @@ public class ElementsWorld extends JPanel {
                 if(rectangles.size() == 0) {
                     return;
                 }
+                for (int i = 0; i < 10; i++) {
                 startMillis = System.nanoTime();
-//                for (int i = 0; i < 10; i++) {
+
                     gameUpdate();
-//                }
-                endMilis = System.nanoTime();
+
+                endMillis = System.nanoTime();
                 if ((staticRectangles.size() == numberOfStaticRectangles)) {
-                    averageTime.add(endMilis - startMillis);
+                    averageTime.add(endMillis - startMillis);
                 } else {
                     System.out.println(numberOfStaticRectangles + "," + averageTime.stream().mapToDouble(val -> val).average().orElse(0.0));
                     numberOfStaticRectangles=staticRectangles.size();
                     averageTime.clear();
-                    averageTime.add(endMilis - startMillis);
+                    averageTime.add(endMillis - startMillis);
+                }
                 }
                 repaint();
                 if(speed != 1/100) {
@@ -125,6 +128,7 @@ public class ElementsWorld extends JPanel {
                         Thread.sleep(speed);
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
+                        break;
                     }
                 }
             }
@@ -132,21 +136,56 @@ public class ElementsWorld extends JPanel {
         gameThread.start();
     }
 
-
+// iterate every rectangle, check matrixIndex and iterate with static rectangles in that matrix[i]
 
     public void gameUpdate() {
+
         iter = rectangles.listIterator();
-        while (iter.hasNext()) {
+        while(iter.hasNext()){
             try{
                 item = iter.next();
             } catch (Exception e){
                 gameThread.interrupt();
             }
-            if(item.moveOneStepCollision(box)){
-                staticRectangles.add(item);
-                iter.remove();
+//            for(Integer i : item.matrixIndex){
+//                matrixIterator = listOfMatrix.get(i).listIterator();
+//                while(matrixIterator.hasNext()){
+//                    if(item.moveOneStepCollision(box))
+//                }
+//            }
+                if(item.moveOneStepCollision(box, listOfMatrix, canvasWidth, canvasHeight)){
+                    for(Integer i : item.matrixIndex){
+                        listOfMatrix.get(i).add(item);
+                    }
+                    staticRectangles.add(item);
+                    iter.remove();
             }
         }
+//        for(LinkedList<Rectangle> cellLinkedList : listOfMatrix){
+//            iter = cellLinkedList.listIterator();
+//            while(iter.hasNext()){
+//                try{
+//                    item = iter.next();
+//                } catch (Exception e){
+//                    gameThread.interrupt();
+//                }
+//                if(item.moveOneStepCollision(box)){
+//                    staticRectangles.add(item);
+//                    iter.remove();
+//                }
+//        }
+//        iter = rectangles.listIterator();
+//        while (iter.hasNext()) {
+//            try{
+//                item = iter.next();
+//            } catch (Exception e){
+//                gameThread.interrupt();
+//            }
+//            if(item.moveOneStepCollision(box)){
+//                staticRectangles.add(item);
+//                iter.remove();
+//            }
+//        }
 //        for (Rectangle rectangle : rectangles) {
 //            rectangle.moveOneStepCollision(box);
 //        }
@@ -215,10 +254,10 @@ public class ElementsWorld extends JPanel {
 //            }
 //        }
 //
-//        float rectangleMinX = box.minX + 1;
-//        float rectangleMinY = box.minY + 1;
-//        float rectangleMaxX = box.maxX - rectangle.height - 1;
-//        float rectangleMaxY = box.maxY - rectangle.width - 1;
+//        double rectangleMinX = box.minX + 1;
+//        double rectangleMinY = box.minY + 1;
+//        double rectangleMaxX = box.maxX - rectangle.height - 1;
+//        double rectangleMaxY = box.maxY - rectangle.width - 1;
 //
 //        // Check if the rectangle moves over the bounds. If so, adjust the position and speed.
 //        if (rectangle.x < rectangleMinX) {

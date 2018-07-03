@@ -57,7 +57,7 @@ public class GUICardLayout {
 
         stopButton.addActionListener(event -> { 
             if(!GUI.elementsWorld.gameThread.isInterrupted()) GUI.elementsWorld.gameStart();
-            else GUI.elementsWorld.gameThread.interrupt();
+            else GUI.elementsWorld.gameThread.stop();
         });
         generateMoreButton.addActionListener(event -> {
             if(GUI.elementsWorld.gameThread.isInterrupted()){
