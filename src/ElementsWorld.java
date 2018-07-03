@@ -1,3 +1,5 @@
+import org.apache.commons.math3.distribution.NormalDistribution;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -83,9 +85,6 @@ public class ElementsWorld extends JPanel {
         Rectangle stopped = new Rectangle((canvasWidth / 2) - 10, (canvasHeight / 2) - 10, 20, 20);
         stopped.calculateMatrixIndex(canvasWidth, canvasHeight);
         stopped.stopped = true;
-        for(Integer i : stopped.matrixIndex){
-            listOfMatrix.get(i).add(stopped);
-        }
 //        rectangles.add(stopped);
         staticRectangles.add(stopped);
     }
@@ -147,45 +146,11 @@ public class ElementsWorld extends JPanel {
             } catch (Exception e){
                 gameThread.interrupt();
             }
-//            for(Integer i : item.matrixIndex){
-//                matrixIterator = listOfMatrix.get(i).listIterator();
-//                while(matrixIterator.hasNext()){
-//                    if(item.moveOneStepCollision(box))
-//                }
-//            }
-                if(item.moveOneStepCollision(box, listOfMatrix, canvasWidth, canvasHeight)){
-                    for(Integer i : item.matrixIndex){
-                        listOfMatrix.get(i).add(item);
-                    }
-                    staticRectangles.add(item);
-                    iter.remove();
+            if(item.moveOneStepCollision(box)){
+                staticRectangles.add(item);
+                iter.remove();
             }
         }
-//        for(LinkedList<Rectangle> cellLinkedList : listOfMatrix){
-//            iter = cellLinkedList.listIterator();
-//            while(iter.hasNext()){
-//                try{
-//                    item = iter.next();
-//                } catch (Exception e){
-//                    gameThread.interrupt();
-//                }
-//                if(item.moveOneStepCollision(box)){
-//                    staticRectangles.add(item);
-//                    iter.remove();
-//                }
-//        }
-//        iter = rectangles.listIterator();
-//        while (iter.hasNext()) {
-//            try{
-//                item = iter.next();
-//            } catch (Exception e){
-//                gameThread.interrupt();
-//            }
-//            if(item.moveOneStepCollision(box)){
-//                staticRectangles.add(item);
-//                iter.remove();
-//            }
-//        }
 //        for (Rectangle rectangle : rectangles) {
 //            rectangle.moveOneStepCollision(box);
 //        }
