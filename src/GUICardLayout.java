@@ -3,35 +3,32 @@ import java.awt.*;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.LinkedList;
 
-public class GUICardLayout {
+class GUICardLayout {
     public JPanel panel1;
-    public JSpinner numberOfRectangles;
-    public JSlider temperatureSlider;
-    public JSlider speedSlider;
+    private JSpinner numberOfRectangles;
+    private JSlider temperatureSlider;
+    private JSlider speedSlider;
     public JButton stopButton;
-    public JButton generateMoreButton;
+    private JButton generateMoreButton;
     public JPanel controlPanel;
-    public JButton startButton;
-    public JButton generateButton;
+    private JButton startButton;
+    private JButton generateButton;
     public JPanel controlPanelRun;
-    public JSlider speedSliderControlPanel;
-    public JSlider temperatureSliderControlPanel;
-    public JSpinner heightSpinnerControlPanel;
-    public JSpinner widthSpinnerControlPanel;
-    public JSpinner heightSpinnerControlRunPanel;
-    public JSpinner widthSpinnerControlRunPanel;
-    public JSpinner numberOfRectanglesControlRunPanel;
-    public JButton createNewButton;
-    public CardLayout cardLayout = (CardLayout)panel1.getLayout();
+    private JSlider speedSliderControlPanel;
+    private JSlider temperatureSliderControlPanel;
+    private JSpinner heightSpinnerControlPanel;
+    private JSpinner widthSpinnerControlPanel;
+    private JSpinner heightSpinnerControlRunPanel;
+    private JSpinner widthSpinnerControlRunPanel;
+    private JSpinner numberOfRectanglesControlRunPanel;
+    private JButton createNewButton;
+    private final CardLayout cardLayout = (CardLayout)panel1.getLayout();
 
 
     public GUICardLayout() {
         startButton.addActionListener(event -> {
             GUI.elementsWorld.gameStart();
-//            GUI.container.remove(GUI.controlPanel);
-//            GUI.container.add(GUI.controlPanelRunning);
             cardLayout.show(panel1, "Card3");
             GUI.elementsWorld.setHowManyRectangles((Integer) numberOfRectanglesControlRunPanel.getValue());
             GUI.frame.revalidate(); // to invoke the layout manager
@@ -47,14 +44,13 @@ public class GUICardLayout {
             GUI.elementsWorld.gameThread.interrupt();
             cardLayout.show(panel1, "Card2");
 //            GUI.elementsWorld = new ElementsWorld(GUI.elementsWorld.getCanvasWidth(), GUI.elementsWorld.getCanvasHeight());
-            GUI.elementsWorld.setStaticRectangles(new ArrayList<>());
-            GUI.elementsWorld.setRectangles(new ArrayList<>());
+            ElementsWorld.setStaticRectangles(new ArrayList<>());
+            ElementsWorld.setRectangles(new ArrayList<>());
             GUI.elementsWorld.setHowManyRectangles((Integer) numberOfRectangles.getValue());
             GUI.frame.revalidate();
             GUI.frame.repaint();
             GUI.elementsWorld.repaint();
         });
-
         stopButton.addActionListener(event -> { 
             if(!GUI.elementsWorld.gameThread.isInterrupted()) GUI.elementsWorld.gameStart();
             else GUI.elementsWorld.gameThread.stop();
@@ -65,7 +61,7 @@ public class GUICardLayout {
                 GUI.frame.repaint();
             }
             else{
-                GUI.elementsWorld.gameThread.interrupt();
+                GUI.elementsWorld.gameThread.stop();
                 GUI.elementsWorld.createRectangleOnBorder((Integer) widthSpinnerControlRunPanel.getValue(), (Integer) heightSpinnerControlRunPanel.getValue());
                 GUI.elementsWorld.gameStart();
             }
@@ -103,8 +99,6 @@ public class GUICardLayout {
             }
         });
 
-
-
         Hashtable labelTableTemperature = new Hashtable();
         labelTableTemperature.put(1, new JLabel("Low"));
         labelTableTemperature.put(20, new JLabel("High"));
@@ -120,21 +114,15 @@ public class GUICardLayout {
         speedSlider.setPaintLabels(true);
         speedSliderControlPanel.setLabelTable(labelTableSpeed);
         speedSliderControlPanel.setPaintLabels(true);
-        temperatureSlider.addChangeListener(event -> {
-            Rectangle.setNormalDistribution((double) temperatureSlider.getValue() / 10);
-        });
+        temperatureSlider.addChangeListener(event -> Rectangle.setNormalDistribution((double) temperatureSlider.getValue() / 10));
 
-        speedSlider.addChangeListener(event -> {
-            ElementsWorld.speed = speedSlider.getValue() / 100;
-        });
+        speedSlider.addChangeListener(event -> ElementsWorld.speed = speedSlider.getValue() / 100);
         temperatureSliderControlPanel.addChangeListener(event -> {
             Rectangle.setNormalDistribution((double) temperatureSlider.getValue() / 10);
             temperatureSlider.setValue(temperatureSliderControlPanel.getValue());
         });
 
-        speedSliderControlPanel.addChangeListener(event -> {
-            ElementsWorld.speed = speedSlider.getValue() / 100;
-        });
+        speedSliderControlPanel.addChangeListener(event -> ElementsWorld.speed = speedSlider.getValue() / 100);
         numberOfRectangles.setValue(200);
         numberOfRectangles.addChangeListener(event -> {
             try {

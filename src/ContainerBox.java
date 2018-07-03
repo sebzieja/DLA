@@ -1,13 +1,11 @@
 import java.awt.*;
 
-public class ContainerBox {
+class ContainerBox {
     int minX, maxX, minY, maxY;
-    private Color colorFilled, colorBorder;
-    private static final Color DEFAULT_COLOR_FILL = Color.RED;
-    private static final Color DEFAULT_COLOR_BORDER = Color.YELLOW;
+    private final Color colorFilled;
+    private final Color colorBorder;
 
 
-    /* Contructor */
     public ContainerBox(int x, int y, int width, int height, Color colorFilled, Color colorBorder) {
         minX = x;
         minY = y;
@@ -15,11 +13,6 @@ public class ContainerBox {
         maxY = y + height;
         this.colorFilled = colorFilled;
         this.colorBorder = colorBorder;
-    }
-
-    /* Constructor with default color */
-    public ContainerBox(int x, int y, int width, int height) {
-        this(x, y, width, height, DEFAULT_COLOR_FILL, DEFAULT_COLOR_BORDER);
     }
 
     public void setter(int x, int y, int width, int height) {
